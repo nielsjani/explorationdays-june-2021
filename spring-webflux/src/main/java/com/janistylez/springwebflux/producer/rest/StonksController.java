@@ -1,5 +1,6 @@
 package com.janistylez.springwebflux.producer.rest;
 
+import com.janistylez.springwebflux.producer.dto.PortfolioItem;
 import com.janistylez.springwebflux.producer.dto.StockInfo;
 import com.janistylez.springwebflux.producer.dto.StockNonFinancialInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/stonks")
+@CrossOrigin(origins = "*")
 public class StonksController {
 
     @Autowired
@@ -32,15 +34,25 @@ public class StonksController {
     }
 
     //https://medium.com/@fede.lopez/take-reactive-programming-with-spring-to-the-infinity-and-beyond-965a4c15b26
+    //Dont forget the mediatype or the consumer wont receive anything!
     @GetMapping(value="/{id}/stream",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<StockInfo> getStocks(@PathVariable int id, @RequestParam int delay) {
         Flux<Long> interval = Flux.interval(Duration.ofSeconds(delay));
-        Flux<StockInfo> stockInfoFlux = Flux.fromStream(Stream.generate(() -> stockRepo.getLatest(id)));
+        Flux<StockInfo> stockInfoFlux = Flux.fromStream(Stream.generate(() -> stockRepo.getLatest(id)))
+                .onErrorResume(Mono::error);
 
         //Combine fluxes so we generate a new result every <delay> seconds
         return Flux.zip(interval, stockInfoFlux).map(Tuple2::getT2)
                 // End stream after 1 minute. Otherwise risk stream would run infinitely
                 .take(Duration.ofMinutes(1));
+    }
+
+    @GetMapping(value = "/portfolio/{portfolioId}")
+    public Mono<List<PortfolioItem>> getPortfolio(@PathVariable int portfolioId) {
+        //Seems like there is no way to handle regular thrown exception gracefully using a chainable method
+        // Handling Mono.error is easy, though
+        return stockRepo.getPortfolio(portfolioId)
+                .onErrorReturn(List.of());
     }
 
     private StockInfo randomStock(int id) {
