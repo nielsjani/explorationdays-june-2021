@@ -1,4 +1,4 @@
-package com.janistylez.springwebflux.dto;
+package com.janistylez.springwebflux.producer.dto;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -41,5 +41,15 @@ public class StockInfo implements Serializable {
 
     public void setTime(LocalDateTime time) {
         this.time = time;
+    }
+
+    @Override
+    public String toString() {
+        return "StockInfo{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", value=" + value +
+                ", time=" + time +
+                '}';
     }
 }
