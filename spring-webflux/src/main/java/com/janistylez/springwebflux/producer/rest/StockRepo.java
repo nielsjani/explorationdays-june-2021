@@ -1,8 +1,10 @@
 package com.janistylez.springwebflux.producer.rest;
 
+import com.janistylez.springwebflux.producer.dto.StockInfo;
 import com.janistylez.springwebflux.producer.dto.StockNonFinancialInfo;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,5 +31,19 @@ public class StockRepo {
                     return res;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public StockInfo getLatest(int id) {
+        if(!stocks.containsKey(id)) {
+            throw new IllegalArgumentException("Stock not found");
+        }
+        StockRepoEntry stockRepoEntry = stocks.get(id);
+
+        StockInfo result = new StockInfo();
+        result.setId(id);
+        result.setName(stockRepoEntry.getName());
+        result.setValue(stockRepoEntry.getMostRecentValue());
+        result.setTime(LocalDateTime.now());
+        return result;
     }
 }

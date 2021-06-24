@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
@@ -38,6 +40,19 @@ public class ReactiveConsumer {
                 .bodyToMono(new ParameterizedTypeReference<>() {});
 
         stockInfoMono.subscribe(this::handleListUsingLog);
+    }
+
+    @GetMapping("/flux")
+    public void consumeFlux() {
+        Flux<StockInfo> stockInfoFlux = webClient()
+                .get()
+                .uri("/stonks/{id}/stream?delay=2", 1)
+                .retrieve()
+                .bodyToFlux(StockInfo.class);
+
+        Disposable subscribe = stockInfoFlux
+                .doOnComplete(() -> System.out.println("Stream completed"))
+                .subscribe(this::handleUsingLog);
     }
 
     private void handleUsingLog(Serializable result) {
