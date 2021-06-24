@@ -1,0 +1,5 @@
+<p>home works!</p>
+
+<div *ngFor=" let item of getOverview() | async">
+  <a routerLink="/detail/{{item.id}}">{{item.name}}</a>
+</div>
