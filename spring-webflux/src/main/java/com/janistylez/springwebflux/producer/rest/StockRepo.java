@@ -38,7 +38,6 @@ public class StockRepo {
     }
 
     public StockInfo getLatest(int id) {
-        System.out.println("Getting latest");
         if (!stocks.containsKey(id)) {
             throw new IllegalArgumentException("Stock not found");
         }

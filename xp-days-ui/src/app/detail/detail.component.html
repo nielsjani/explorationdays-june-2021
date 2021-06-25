@@ -1,1 +1,8 @@
-<p>detail works!</p>
+<h2>Stock evolution</h2>
+
+<h3 *ngIf="getStockName()">{{getStockName()}}</h3>
+
+<p *ngFor="let stock of stockValues">
+  {{stock.value}} @ {{stock.time}}
+</p>
+

@@ -8,12 +8,10 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/stonks")
@@ -34,17 +32,16 @@ public class StonksController {
     }
 
     //https://medium.com/@fede.lopez/take-reactive-programming-with-spring-to-the-infinity-and-beyond-965a4c15b26
-    //Dont forget the mediatype or the consumer wont receive anything!
-    @GetMapping(value="/{id}/stream",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    //Dont forget the mediatype or the consumer wont receive anything! Has to be a json stream for Angular to pick it up.
+    @GetMapping(value = "/{id}/stream", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<StockInfo> getStocks(@PathVariable int id, @RequestParam int delay) {
-        Flux<Long> interval = Flux.interval(Duration.ofSeconds(delay));
-        Flux<StockInfo> stockInfoFlux = Flux.fromStream(Stream.generate(() -> stockRepo.getLatest(id)))
-                .onErrorResume(Mono::error);
-
-        //Combine fluxes so we generate a new result every <delay> seconds
-        return Flux.zip(interval, stockInfoFlux).map(Tuple2::getT2)
+        //Generate a new result every <delay> seconds
+        return Flux.interval(Duration.ofSeconds(delay))
+                .map(d -> stockRepo.getLatest(id))
+                .onErrorResume(Mono::error)
                 // End stream after 1 minute. Otherwise risk stream would run infinitely
                 .take(Duration.ofMinutes(1));
+
     }
 
     @GetMapping(value = "/portfolio/{portfolioId}")
