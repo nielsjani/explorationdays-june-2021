@@ -28,7 +28,9 @@ public class ReactiveConsumer {
                 .retrieve()
                 .bodyToMono(StockInfo.class);
 
+        //Due to the delay built in the Controller, the subscribe's code will be executed after the sout at the end of this method
         stockInfoMono.subscribe(this::handleUsingLog);
+        System.out.println("Aaaand we're done");
     }
 
     @GetMapping("/monoCollection")

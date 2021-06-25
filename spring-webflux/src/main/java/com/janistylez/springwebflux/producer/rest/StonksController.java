@@ -23,7 +23,7 @@ public class StonksController {
 
     @GetMapping("/{id}")
     public Mono<StockInfo> getLatestStockInfo(@PathVariable int id) {
-        return Mono.just(randomStock(id));
+        return Mono.just(randomStock(id)).delayElement(Duration.ofSeconds(2));
     }
 
     @GetMapping
