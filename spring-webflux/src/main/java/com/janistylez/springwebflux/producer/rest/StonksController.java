@@ -38,7 +38,7 @@ public class StonksController {
         //Generate a new result every <delay> seconds
         return Flux.interval(Duration.ofSeconds(delay))
                 .map(d -> stockRepo.getLatest(id))
-                .onErrorResume(Mono::error)
+                .onErrorResume(Flux::error)
                 // End stream after 1 minute. Otherwise risk stream would run infinitely
                 .take(Duration.ofMinutes(1));
 
