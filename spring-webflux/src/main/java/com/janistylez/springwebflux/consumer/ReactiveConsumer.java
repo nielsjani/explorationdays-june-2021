@@ -1,5 +1,6 @@
 package com.janistylez.springwebflux.consumer;
 
+import com.janistylez.springwebflux.producer.dto.PortfolioValueRequest;
 import com.janistylez.springwebflux.producer.dto.StockInfo;
 import com.janistylez.springwebflux.producer.dto.StockNonFinancialInfo;
 import org.springframework.core.ParameterizedTypeReference;
@@ -13,6 +14,8 @@ import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
 import java.util.List;
+
+import static java.util.Arrays.asList;
 
 @RestController()
 @RequestMapping("/consumer")
@@ -55,6 +58,22 @@ public class ReactiveConsumer {
         Disposable subscribe = stockInfoFlux
                 .doOnComplete(() -> System.out.println("Stream completed"))
                 .subscribe(this::handleUsingLog);
+    }
+
+    @GetMapping("/flux/zip")
+    public void consumeFluxZip() {
+        PortfolioValueRequest portfolioValueRequest = new PortfolioValueRequest();
+        portfolioValueRequest.setIds(asList(1,2,3));
+        Flux<List<StockInfo>> stockInfoFlux = webClient()
+                .post()
+                .uri("/stonks/portfolio/value")
+                .body(Mono.just(portfolioValueRequest), PortfolioValueRequest.class)
+                .retrieve()
+                .bodyToFlux(new ParameterizedTypeReference<>() {});
+
+        Disposable subscribe = stockInfoFlux
+                .doOnComplete(() -> System.out.println("Stream completed"))
+                .subscribe(this::handleListUsingLog);
     }
 
     private void handleUsingLog(Serializable result) {

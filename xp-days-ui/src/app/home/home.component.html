@@ -1,5 +1,14 @@
-<p>home works!</p>
+<h2>Stock overview</h2>
 
 <div *ngFor=" let item of getOverview() | async">
   <a routerLink="/detail/{{item.id}}">{{item.name}}</a>
+  <p *ngIf="getPortfolioInfoFor(item.id)">{{getPortfolioInfoFor(item.id)}}</p>
+  <p>{{getStockWorthFor(item.id, (portfolioValues | async))}}</p>
+  <p *ngIf="portfolioValues | async as pfVals">{{getTotalStockWorth(item.id, pfVals)}}</p>
+</div>
+
+<div *ngIf="(getOverview() | async) as overviewItems">
+  <h2 *ngIf="(portfolioValues | async) as pfVals">
+    For a grand total of {{calculateTotal(overviewItems, pfVals)}}
+  </h2>
 </div>

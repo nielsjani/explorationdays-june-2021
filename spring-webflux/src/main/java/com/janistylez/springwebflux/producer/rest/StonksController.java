@@ -1,6 +1,7 @@
 package com.janistylez.springwebflux.producer.rest;
 
 import com.janistylez.springwebflux.producer.dto.PortfolioItem;
+import com.janistylez.springwebflux.producer.dto.PortfolioValueRequest;
 import com.janistylez.springwebflux.producer.dto.StockInfo;
 import com.janistylez.springwebflux.producer.dto.StockNonFinancialInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,12 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.Arrays.asList;
 
 @RestController
 @RequestMapping("/stonks")
@@ -44,12 +50,32 @@ public class StonksController {
 
     }
 
-    @GetMapping(value = "/portfolio/{portfolioId}")
+    @GetMapping(value = "/portfolio/general/{portfolioId}")
     public Mono<List<PortfolioItem>> getPortfolio(@PathVariable int portfolioId) {
         //Seems like there is no way to handle regular thrown exception gracefully using a chainable method
         // Handling Mono.error is easy, though
         return stockRepo.getPortfolio(portfolioId)
                 .onErrorReturn(List.of());
+    }
+
+    @PostMapping(value = "/portfolio/value", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public Flux<List<StockInfo>> getPortfolioValues(@RequestBody PortfolioValueRequest portfolioValueRequest) {
+        return Flux.interval(Duration.ofSeconds(5))
+                .take(Duration.ofMinutes(1))
+                .flatMap(
+                i -> Flux.zip(fetchStockInfoFluxes(portfolioValueRequest),
+                        zippedFluxes -> Arrays.stream(zippedFluxes)
+                                .map(obj -> (StockInfo) obj)
+                                .collect(Collectors.toList()))
+        );
+
+    }
+
+    private List<Flux<StockInfo>> fetchStockInfoFluxes(PortfolioValueRequest portfolioValueRequest) {
+        return portfolioValueRequest.getIds()
+                .stream()
+                .map(stockId -> Flux.fromStream(Stream.of(stockRepo.getLatest(stockId))))
+                .collect(Collectors.toList());
     }
 
     private StockInfo randomStock(int id) {
